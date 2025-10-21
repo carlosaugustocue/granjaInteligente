@@ -1,0 +1,475 @@
+@startuml "Sistema Granja Inteligente - Patrones de Diseño"
+
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ============================================
+' PATRONES CREACIONALES
+' ============================================
+
+' === FACTORY METHOD ===
+abstract class Animal {
+    - id: String
+    - peso: double
+    - edad: int
+    - nombre: String
+    - tipoProduccion: String
+    + comer(): void
+    + dormir(): void
+    + producir(): void
+    + obtenerInfo(): String
+}
+
+class Vaca extends Animal {
+    - litrosLeche: double
+    + comer(): void
+    + producir(): void
+    + ordeñar(): double
+}
+
+class Cerdo extends Animal {
+    - pesoOptimo: double
+    + comer(): void
+    + producir(): void
+    + engordar(): void
+}
+
+class Gallina extends Animal {
+    - huevosPorDia: int
+    + comer(): void
+    + producir(): void
+    + ponerHuevo(): void
+}
+
+abstract class FabricaAnimales {
+    + {abstract} crearAnimal(tipo: String): Animal
+    + procesarAnimal(tipo: String): Animal
+}
+
+class FabricaCorralLechero extends FabricaAnimales {
+    + crearAnimal(tipo: String): Animal
+}
+
+class FabricaCorralCarne extends FabricaAnimales {
+    + crearAnimal(tipo: String): Animal
+}
+
+class FabricaCorralHuevos extends FabricaAnimales {
+    + crearAnimal(tipo: String): Animal
+}
+
+' === ABSTRACT FACTORY ===
+interface GranjaAbstractFactory {
+    + crearAnimal(): Animal
+    + crearAlimento(): Alimento
+    + crearCorral(): Corral
+}
+
+class GranjaLecheraFactory implements GranjaAbstractFactory {
+    + crearAnimal(): Vaca
+    + crearAlimento(): AlimentoLechero
+    + crearCorral(): CorralLechero
+}
+
+class GranjaPorcinaFactory implements GranjaAbstractFactory {
+    + crearAnimal(): Cerdo
+    + crearAlimento(): AlimentoPorcino
+    + crearCorral(): CorralPorcino
+}
+
+abstract class Alimento {
+    - nombre: String
+    - cantidadKg: double
+    - nutrientes: String
+    + obtenerInfo(): String
+}
+
+class AlimentoLechero extends Alimento {
+    - calcio: double
+}
+
+class AlimentoPorcino extends Alimento {
+    - proteinas: double
+}
+
+abstract class Corral {
+    - id: String
+    - capacidad: int
+    - tipo: String
+    + agregarAnimal(animal: Animal): void
+    + obtenerAnimales(): List<Animal>
+}
+
+class CorralLechero extends Corral {
+    - sistemaOrdeño: String
+}
+
+class CorralPorcino extends Corral {
+    - sistemaPesaje: String
+}
+
+' === BUILDER ===
+class AnimalBuilder {
+    - animal: Animal
+    + construirNuevoAnimal(tipo: String): AnimalBuilder
+    + conPeso(peso: double): AnimalBuilder
+    + conEdad(edad: int): AnimalBuilder
+    + conNombre(nombre: String): AnimalBuilder
+    + conHistorialMedico(historial: String): AnimalBuilder
+    + conNivelActividad(nivel: String): AnimalBuilder
+    + conVacunas(vacunas: List<String>): AnimalBuilder
+    + obtener(): Animal
+}
+
+class DirectorGranja {
+    - builder: AnimalBuilder
+    + construirVacaLechera(): Animal
+    + construirCerdoEngorde(): Animal
+    + construirGallinaPonedora(): Animal
+}
+
+' === SINGLETON ===
+class AlimentadorGlobal {
+    - {static} instancia: AlimentadorGlobal
+    - dispensadores: Map<String, Dispensador>
+    - AlimentadorGlobal()
+    + {static} obtenerInstancia(): AlimentadorGlobal
+    + registrarDispensador(id: String, dispensador: Dispensador): void
+    + alimentarCorral(corralId: String, cantidad: double): void
+    + obtenerEstadoGlobal(): String
+    + programarAlimentacion(horario: String): void
+}
+
+class Dispensador {
+    - id: String
+    - capacidad: double
+    - nivelActual: double
+    + dispensar(cantidad: double): void
+    + recargar(): void
+}
+
+' ============================================
+' PATRONES ESTRUCTURALES
+' ============================================
+
+' === ADAPTER ===
+interface SensorModerno {
+    + obtenerDatos(): DatosSensor
+    + calibrar(): void
+}
+
+class SensorLegacy {
+    + readData(): String
+    + getStatus(): int
+}
+
+class AdaptadorSensor implements SensorModerno {
+    - sensorAntiguo: SensorLegacy
+    + obtenerDatos(): DatosSensor
+    + calibrar(): void
+    - convertirDatos(datosAntiguos: String): DatosSensor
+}
+
+class DatosSensor {
+    - temperatura: double
+    - humedad: double
+    - timestamp: long
+    - tipoSensor: String
+}
+
+' === DECORATOR ===
+abstract class AnimalDecorator extends Animal {
+    # animalDecorado: Animal
+    + AnimalDecorator(animal: Animal)
+}
+
+class AnimalConVacuna extends AnimalDecorator {
+    - vacunas: List<String>
+    - fechaVacunacion: Date
+    + agregarVacuna(vacuna: String): void
+    + obtenerInfo(): String
+}
+
+class AnimalConGPS extends AnimalDecorator {
+    - latitud: double
+    - longitud: double
+    - dispositivoGPS: String
+    + obtenerUbicacion(): String
+    + actualizarUbicacion(lat: double, lon: double): void
+    + obtenerInfo(): String
+}
+
+class AnimalConHistorialReproductivo extends AnimalDecorator {
+    - crias: List<String>
+    - fechasGestacion: List<Date>
+    + registrarCria(cria: String): void
+    + obtenerInfo(): String
+}
+
+' === FACADE ===
+class GranjaFacade {
+    - sistemaAlimentacion: SistemaAlimentacion
+    - sistemaRiego: SistemaRiego
+    - sistemaMonitoreo: SistemaMonitoreo
+    - sistemaAlertas: SistemaAlertas
+    + alimentarCorral(corralId: String): void
+    + activarRiego(zonaId: String): void
+    + obtenerEstadoGeneral(): String
+    + generarReporteDiario(): String
+    + activarModoAutomatico(): void
+    + procesarEmergencia(tipo: String): void
+}
+
+class SistemaAlimentacion {
+    + distribuirAlimento(corralId: String, cantidad: double): void
+    + verificarNiveles(): Map<String, Double>
+}
+
+class SistemaRiego {
+    + activar(zona: String): void
+    + programarRiego(horario: String): void
+}
+
+class SistemaMonitoreo {
+    + obtenerDatosSensores(): List<DatosSensor>
+    + analizarSalud(animalId: String): String
+}
+
+class SistemaAlertas {
+    + enviarAlerta(mensaje: String, nivel: String): void
+    + registrarEvento(evento: String): void
+}
+
+' ============================================
+' PATRONES COMPORTAMENTALES
+' ============================================
+
+' === OBSERVER ===
+interface Subject {
+    + agregarObservador(obs: Observer): void
+    + eliminarObservador(obs: Observer): void
+    + notificar(): void
+}
+
+interface Observer {
+    + actualizar(datos: Object): void
+}
+
+class SensorNivelAlimento implements Subject {
+    - observadores: List<Observer>
+    - nivelActual: double
+    - nivelMinimo: double
+    - corralId: String
+    + medirNivel(): void
+    + agregarObservador(obs: Observer): void
+    + eliminarObservador(obs: Observer): void
+    + notificar(): void
+}
+
+class SistemaAlertaObserver implements Observer {
+    - tipoAlerta: String
+    + actualizar(datos: Object): void
+    - procesarAlerta(nivel: double): void
+}
+
+class RegistroEventosObserver implements Observer {
+    - archivo: String
+    + actualizar(datos: Object): void
+    - registrarEvento(datos: Object): void
+}
+
+' === STRATEGY ===
+interface EstrategiaAlimentacion {
+    + calcularCantidad(animal: Animal): double
+    + determinarFrecuencia(): int
+    + obtenerTipoAlimento(): String
+}
+
+class EstrategiaInvierno implements EstrategiaAlimentacion {
+    - factorIncremento: double = 1.3
+    + calcularCantidad(animal: Animal): double
+    + determinarFrecuencia(): int
+    + obtenerTipoAlimento(): String
+}
+
+class EstrategiaVerano implements EstrategiaAlimentacion {
+    - factorReduccion: double = 0.9
+    + calcularCantidad(animal: Animal): double
+    + determinarFrecuencia(): int
+    + obtenerTipoAlimento(): String
+}
+
+class EstrategiaAhorro implements EstrategiaAlimentacion {
+    - porcentajeAhorro: double = 0.2
+    + calcularCantidad(animal: Animal): double
+    + determinarFrecuencia(): int
+    + obtenerTipoAlimento(): String
+}
+
+class ContextoAlimentacion {
+    - estrategia: EstrategiaAlimentacion
+    + setEstrategia(estrategia: EstrategiaAlimentacion): void
+    + ejecutarAlimentacion(animal: Animal): void
+}
+
+' === COMMAND ===
+interface Comando {
+    + ejecutar(): void
+    + deshacer(): void
+}
+
+class EncenderRiegoCommand implements Comando {
+    - sistemaRiego: SistemaRiego
+    - zona: String
+    - estadoAnterior: boolean
+    + ejecutar(): void
+    + deshacer(): void
+}
+
+class DispensarAlimentoCommand implements Comando {
+    - dispensador: Dispensador
+    - cantidad: double
+    - cantidadAnterior: double
+    + ejecutar(): void
+    + deshacer(): void
+}
+
+class RegistrarEventoCommand implements Comando {
+    - sistema: SistemaAlertas
+    - evento: String
+    - timestamp: long
+    + ejecutar(): void
+    + deshacer(): void
+}
+
+class InvocadorComandos {
+    - comandos: List<Comando>
+    - historial: List<Comando>
+    + agregarComando(cmd: Comando): void
+    + ejecutarComandos(): void
+    + deshacerUltimo(): void
+    + programarComando(cmd: Comando, tiempo: long): void
+}
+
+' === STATE ===
+interface EstadoAnimal {
+    + comer(contexto: AnimalConEstado): void
+    + dormir(contexto: AnimalConEstado): void
+    + mover(contexto: AnimalConEstado): void
+    + obtenerDescripcion(): String
+}
+
+class EstadoSano implements EstadoAnimal {
+    + comer(contexto: AnimalConEstado): void
+    + dormir(contexto: AnimalConEstado): void
+    + mover(contexto: AnimalConEstado): void
+    + obtenerDescripcion(): String
+}
+
+class EstadoEnfermo implements EstadoAnimal {
+    + comer(contexto: AnimalConEstado): void
+    + dormir(contexto: AnimalConEstado): void
+    + mover(contexto: AnimalConEstado): void
+    + obtenerDescripcion(): String
+}
+
+class EstadoEnTratamiento implements EstadoAnimal {
+    - diasTratamiento: int
+    + comer(contexto: AnimalConEstado): void
+    + dormir(contexto: AnimalConEstado): void
+    + mover(contexto: AnimalConEstado): void
+    + obtenerDescripcion(): String
+}
+
+class AnimalConEstado {
+    - estado: EstadoAnimal
+    - animal: Animal
+    + cambiarEstado(nuevoEstado: EstadoAnimal): void
+    + realizarAccion(accion: String): void
+    + obtenerEstadoActual(): String
+}
+
+' ============================================
+' CLASE PRINCIPAL DE INTEGRACIÓN
+' ============================================
+
+class SistemaGranjaInteligente {
+    - facade: GranjaFacade
+    - alimentadorGlobal: AlimentadorGlobal
+    - invocador: InvocadorComandos
+    - fabricas: Map<String, FabricaAnimales>
+    - sensores: List<SensorNivelAlimento>
+    + inicializar(): void
+    + procesarCicloAlimentacion(): void
+    + monitorearGranja(): void
+    + generarReporte(): String
+    + ejecutarMantenimiento(): void
+}
+
+' ============================================
+' RELACIONES
+' ============================================
+
+' Factory Method
+FabricaAnimales ..> Animal : crea
+FabricaCorralLechero ..> Vaca : crea
+FabricaCorralCarne ..> Cerdo : crea
+FabricaCorralHuevos ..> Gallina : crea
+
+' Abstract Factory
+GranjaAbstractFactory ..> Animal : crea
+GranjaAbstractFactory ..> Alimento : crea
+GranjaAbstractFactory ..> Corral : crea
+GranjaLecheraFactory ..> AlimentoLechero : crea
+GranjaLecheraFactory ..> CorralLechero : crea
+GranjaPorcinaFactory ..> AlimentoPorcino : crea
+GranjaPorcinaFactory ..> CorralPorcino : crea
+
+' Builder
+AnimalBuilder --> Animal : construye
+DirectorGranja --> AnimalBuilder : usa
+
+' Singleton
+AlimentadorGlobal --> Dispensador : gestiona
+
+' Adapter
+AdaptadorSensor --> SensorLegacy : adapta
+AdaptadorSensor ..> DatosSensor : produce
+
+' Decorator
+AnimalDecorator o--> Animal : decora
+
+' Facade
+GranjaFacade --> SistemaAlimentacion : delega
+GranjaFacade --> SistemaRiego : delega
+GranjaFacade --> SistemaMonitoreo : delega
+GranjaFacade --> SistemaAlertas : delega
+
+' Observer
+SensorNivelAlimento --> Observer : notifica
+Subject <|.. SensorNivelAlimento
+Observer <|.. SistemaAlertaObserver
+Observer <|.. RegistroEventosObserver
+
+' Strategy
+ContextoAlimentacion --> EstrategiaAlimentacion : usa
+
+' Command
+InvocadorComandos --> Comando : ejecuta
+EncenderRiegoCommand --> SistemaRiego : controla
+DispensarAlimentoCommand --> Dispensador : controla
+RegistrarEventoCommand --> SistemaAlertas : controla
+
+' State
+AnimalConEstado --> EstadoAnimal : tiene
+AnimalConEstado --> Animal : gestiona
+
+' Sistema Principal
+SistemaGranjaInteligente --> GranjaFacade : usa
+SistemaGranjaInteligente --> AlimentadorGlobal : usa
+SistemaGranjaInteligente --> InvocadorComandos : usa
+SistemaGranjaInteligente --> FabricaAnimales : usa
+SistemaGranjaInteligente --> SensorNivelAlimento : monitorea
+
+@enduml
